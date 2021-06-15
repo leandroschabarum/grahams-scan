@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <regex.h>
 #include <math.h>
 
 #define CHUNK 10
@@ -18,7 +19,7 @@ typedef struct stack
 	int top;
 } Stack;
 
-/* ####################  Stack Functions  #################### */
+/* ####################  Stack functions  #################### */
 Stack* newStack(void)
 /*
  * Function for creating empty stack structure.
@@ -103,7 +104,7 @@ Point pop(Stack *ptr_stack)
 /* ########################################################### */
 
 
-/* ################  Graham's Scan Functions  ################ */
+/* ################  Graham's Scan functions  ################ */
 void relAngle(const Point ref, Point *p)
 /*
  * Auxiliary function for calculating the relative angle
@@ -210,27 +211,27 @@ void SortByAngle(Point *points, int *vector_size, Stack *ptr_stack)
 		return 0;
 	}
 
-	Point refPoint, *tmp = 0;
-	int i, refPointIndex = refPoint(points, vector_size);
+	Point ref_p, *tmp = 0;
+	int i, ref_pi = refPoint(points, vector_size);
 	tmp = points;
 
-	tmp += refPointIndex;
-	memcpy(&refPoint, tmp, sizeof(Point));
-	put(ptr_stack, refPoint);
-	// printf("\n>>> ref: %d\n\tX = %.2f Y = %.2f a = %.6f\n", refPointIndex, refPoint.x, refPoint.y, refPoint.a);  // DEBUG LINE
+	tmp += ref_pi;
+	memcpy(&ref_p, tmp, sizeof(Point));
+	put(ptr_stack, ref_p);
+	// printf("\n>>> ref: %d\n\tX = %.2f Y = %.2f a = %.6f\n", ref_pi, ref_p.x, ref_p.y, ref_p.a);  // DEBUG LINE
 	i = 0;
 
 	for (i = 0; i < (*vector_size - 1); i++)
 	{
-		if (i < refPointIndex)
+		if (i < ref_pi)
 		{
-			relAngle(refPoint, points);
+			relAngle(ref_p, points);
 		}
 		else
 		{
 			tmp = points;
 			tmp++;
-			relAngle(refPoint, tmp);
+			relAngle(ref_p, tmp);
 			memcpy(points, tmp, sizeof(Point));
 		}
 
@@ -270,7 +271,123 @@ void genConvHull(const Point *points, const int *vector_size, Stack *ptr_stack)
 /* ########################################################### */
 
 
+/* ###############  Function for reading data  ############### */
+Point* ReadDataFile(const char filename[32])
+/*
+ * Simple function for reading data points from text file.
+ * filename (required) ---> char* | string with the filename
+*/
+{
+	FILE *data_file = 0;
+	data_file = fopen(filename, "r");
+	if (data_file == 0){printf("[ ERROR ] Unable to read file %s\n", filename);}
+
+	int c, l, t;
+	char character, line[32], seg[8];
+	static Point data_points[CHUNK];
+	Point *ptr_dp = 0;
+	ptr_dp = &data_points[0];	
+
+	regex_t pattern;
+	if (regcomp(&pattern, "^[0-9]+( +)?,|;( +)?[0-9]+", REG_EXTENDED) != 0){printf("[ ERROR ] Regular expression not compiled\n");}
+
+	l = 0;
+
+	while (feof(data_file) == 0)
+	{
+		/* character:
+		 *  0 ---> null            (\x00)
+		 * 10 ---> new line        (\x0A)
+		 * 13 ---> carriage return (\x0D)
+		 * 32 ---> space           (\x20)
+		 * 44 ---> comma           (\x2C)
+		 * 59 ---> semicolon       (\x3B)
+		*/
+		memset(&line, 0, sizeof(line));
+		character = fgetc(data_file);
+		c = 0;
+		
+		while (character != EOF && character != 0 && character != 10)
+		{
+			line[c] = character;
+			character = fgetc(data_file);
+			c++;
+		}
+
+		line[c] = 0;
+		
+		if (regexec(&pattern, line, 0, 0, 0) == 0)
+		{
+			memset(&seg, 0, sizeof(seg));
+			t = 0;
+			c = 0;
+
+			/* ---- X value for Point ---- */
+			while (line[c] != 0 && line[c] != 44 && line[c] != 59)
+			{
+				if (line[c] == 32){c++;continue;}
+				seg[t] = line[c];
+				c++;
+				t++;
+			}
+
+			seg[t] = 0;
+			ptr_dp->x = atoi(seg);
+			/* --------------------------- */
+
+			memset(&seg, 0, sizeof(seg));
+			t = 0;
+			c++;
+
+			/* ---- Y value for Point ---- */
+			while (line[c] != 0 && line[c] != 44 && line[c] != 59)
+			{
+				if (line[c] == 32){c++;continue;}
+				seg[t] = line[c];
+				c++;
+				t++;
+			}
+
+			seg[t] = 0;
+			ptr_dp->y = atoi(seg);
+			/* --------------------------- */
+
+			ptr_dp++;
+		}
+
+		l++;
+	}
+
+	fclose(data_file);
+
+	return &data_points[0];
+}
+/* ########################################################### */
+
+
 int main(void)
 {
+	int i, s = 10;
+	Stack *ptrStack = newStack();
+	
+	Point *ptrDataPoints = ReadDataFile("data_points.txt");
+	Point *dp = 0;
+	
+	dp = ptrDataPoints;
+	printf("# ORIGINAL DATA POINTS\n");
+	for (i = 0; i < s; i++){printf("[ %d ]\t(%.2f, %.2f, %.6f)\n", i, dp->x, dp->y, dp->a); dp++;}
+
+	SortByAngle(ptrDataPoints, &s, ptrStack);
+	genConvHull(ptrDataPoints, &s, ptrStack);
+	
+	dp = ptrDataPoints;
+	printf("\n# AFTER SORTING BY ANGLE\n");
+	for (i = 0; i < s; i++){printf("[ %d ]\t(%.2f, %.2f, %.6f)\n", i, dp->x, dp->y, dp->a); dp++;}
+
+	Point test;
+	printf("\n# CONVEX HULL\n");
+	for (i = 0; i < ptrStack->top; i++)
+	{test = peek(ptrStack, i); printf("[ %d ]\t(%.2f, %.2f, %.6f)\n", i, test.x, test.y, test.a);}
+
 	return 0;
 }
