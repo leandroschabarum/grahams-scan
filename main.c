@@ -105,7 +105,12 @@ Point pop(Stack *ptr_stack)
 
 /* ################  Graham's Scan Functions  ################ */
 void relAngle(const Point ref, Point *p)
-/**/
+/*
+ * Auxiliary function for calculating the relative angle
+ * between reference point and given point in the set.
+ * ref (required) ---> Point | reference point
+ * p (required) ---> Point | point by which angle is calculated
+*/
 {
 	float dy, dx;
 	dy = (p->y) - ref.y;
@@ -114,16 +119,23 @@ void relAngle(const Point ref, Point *p)
 	p->a = (dx > 0) ? atan(dy/dx) : (dx < 0) ? M_PI + atan(dy/dx) : M_PI/2;
 }
 
-float detLeft(const Point ref, const Point p1, const Point p2)
-/**/
+float detLeft(const Point p0, const Point p1, const Point p2)
+/*
+ * Auxiliary function for calculating determinant and
+ * checking if the given points constitute a left turn.
+ * p0 (required) ---> Point | first point to be checked
+ * p1 (required) ---> Point | second point to be checked
+ * p2 (required) ---> Point | third point to be checked
+ * Returns int | 1 if left turn, 0 if not
+*/
 {
 	Point op1, op2;
 	float det;
 
-	op1.x = p1.x - ref.x;
-	op1.y = p1.y - ref.y;
-	op2.x = p2.x - ref.x;
-	op2.y = p2.y - ref.y;
+	op1.x = p1.x - p0.x;
+	op1.y = p1.y - p0.y;
+	op2.x = p2.x - p0.x;
+	op2.y = p2.y - p0.y;
 	
 	det = ((op1.x * op2.y) - (op1.y * op2.x));
 
@@ -131,8 +143,16 @@ float detLeft(const Point ref, const Point p1, const Point p2)
 }
 
 int refPoint(const Point *points, const int *vector_size)
-/**/
+/*
+ * Auxiliary function for finding starting point to
+ * to be used as reference position on Graham's Scan.
+ * *points (required) ---> Point* | pointer to array of points
+ * *vector_size (required) ---> int* | positive integer refering to size of array
+ * Returns int | index of reference element in array of points
+*/
 {
+	if (*vector_size < 0){printf("[ ERROR ] Array size has to be a positive integer\n");}
+
 	Point mp;
 	int i, minY = 0;
 
@@ -156,10 +176,23 @@ int refPoint(const Point *points, const int *vector_size)
 }
 
 void SortByAngle(Point *points, int *vector_size, Stack *ptr_stack)
-/**/
+/*
+ * Auxiliary function for sorting array of points
+ * accordingly to angle formed with reference point.
+ * *points (required) ---> Point* | pointer to array of points
+ * *vector_size (required) ---> int* | positive integer refering to size of array
+ * *ptr_stack (required) ---> Stack* | pointer to stack that will be holding the convex hull points
+*/
 {
+	if (*vector_size < 0){printf("[ ERROR ] Array size has to be a positive integer\n");}
+
 	int checkAngle(const void* p1, const void* p2)
-	/**/
+	/*
+	 * Rule function for quicksort algorithm.
+	 * p1 (required) ---> void* | void pointer
+	 * p2 (required) ---> void* | void pointer
+	 * Return int | 0 if p1 == p2, 1 if p1 > p2 or -1 if p1 < p2
+	*/
 	{
 		Point *P1 = 0, *P2 = 0;
 		P1 = (Point*) p1;
@@ -212,8 +245,15 @@ void SortByAngle(Point *points, int *vector_size, Stack *ptr_stack)
 }
 
 void genConvHull(const Point *points, const int *vector_size, Stack *ptr_stack)
-/**/
+/*
+ * Function implementing Graham's Scan logic.
+ * *points (required) ---> Point* | pointer to array of points
+ * *vector_size (required) ---> int* | positive integer refering to size of array
+ * *ptr_stack (required) ---> Stack* | pointer to stack that will be holding the convex hull points
+*/
 {
+	if (*vector_size < 0){printf("[ ERROR ] Array size has to be a positive integer\n");}
+
 	int i;
 
 	for (i = 0; i < *vector_size; i++)
