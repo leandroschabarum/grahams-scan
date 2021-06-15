@@ -102,6 +102,60 @@ Point pop(Stack *ptr_stack)
 /* ########################################################### */
 
 
+/* ################  Graham's Scan Functions  ################ */
+void relAngle(const Point ref, Point *p)
+/**/
+{
+	float dy, dx;
+	dy = (p->y) - ref.y;
+	dx = (p->x) - ref.x;
+
+	p->a = (dx > 0) ? atan(dy/dx) : (dx < 0) ? M_PI + atan(dy/dx) : M_PI/2;
+}
+
+float detLeft(const Point ref, const Point p1, const Point p2)
+/**/
+{
+	Point op1, op2;
+	float det;
+
+	op1.x = p1.x - ref.x;
+	op1.y = p1.y - ref.y;
+	op2.x = p2.x - ref.x;
+	op2.y = p2.y - ref.y;
+	
+	det = ((op1.x * op2.y) - (op1.y * op2.x));
+
+	return (det <= 0) ? 1 : 0;
+}
+
+int ref_point(const Point *points, const int *vector_size)
+/**/
+{
+	Point mp;
+	int i, minY = 0;
+
+	mp.x = points->x;
+	mp.y = points->y;
+	points++;
+
+	for (i = 1; i < *vector_size; i++)
+	{
+		if (mp.y > points->y || (mp.y == points->y && mp.x > points->x))
+		{
+			minY = i;
+			mp.x = points->x;
+			mp.y = points->y;
+		}
+
+		points++;
+	}
+
+	return minY;
+}
+/* ########################################################### */
+
+
 int main(void)
 {
 	return 0;
