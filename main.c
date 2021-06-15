@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #define CHUNK 10
 
@@ -129,7 +130,7 @@ float detLeft(const Point ref, const Point p1, const Point p2)
 	return (det <= 0) ? 1 : 0;
 }
 
-int ref_point(const Point *points, const int *vector_size)
+int refPoint(const Point *points, const int *vector_size)
 /**/
 {
 	Point mp;
@@ -152,6 +153,79 @@ int ref_point(const Point *points, const int *vector_size)
 	}
 
 	return minY;
+}
+
+void SortByAngle(Point *points, int *vector_size, Stack *ptr_stack)
+/**/
+{
+	int checkAngle(const void* p1, const void* p2)
+	/**/
+	{
+		Point *P1 = 0, *P2 = 0;
+		P1 = (Point*) p1;
+		P2 = (Point*) p2;
+
+		if (P2->a < P1->a){return 1;}
+		if (P2->a > P1->a){return -1;}
+		
+		if (P2->a == P1->a)
+		{
+			if (P2->x < P1->x){return 1;}
+			if (P2->x > P1->x){return -1;}
+		}
+
+		return 0;
+	}
+
+	Point refPoint, *tmp = 0;
+	int i, refPointIndex = refPoint(points, vector_size);
+	tmp = points;
+
+	tmp += refPointIndex;
+	memcpy(&refPoint, tmp, sizeof(Point));
+	put(ptr_stack, refPoint);
+	// printf("\n>>> ref: %d\n\tX = %.2f Y = %.2f a = %.6f\n", refPointIndex, refPoint.x, refPoint.y, refPoint.a);  // DEBUG LINE
+	i = 0;
+
+	for (i = 0; i < (*vector_size - 1); i++)
+	{
+		if (i < refPointIndex)
+		{
+			relAngle(refPoint, points);
+		}
+		else
+		{
+			tmp = points;
+			tmp++;
+			relAngle(refPoint, tmp);
+			memcpy(points, tmp, sizeof(Point));
+		}
+
+		points++;
+	}
+
+	memset(points, 0, sizeof(Point));
+	*vector_size = *vector_size - 1;
+	points -= *vector_size;
+
+	qsort(points, *vector_size, sizeof(Point), checkAngle);
+}
+
+void genConvHull(const Point *points, const int *vector_size, Stack *ptr_stack)
+/**/
+{
+	int i;
+
+	for (i = 0; i < *vector_size; i++)
+	{
+		while (ptr_stack->top > 1 && detLeft(peek(ptr_stack, 1), peek(ptr_stack, 0), *points))
+		{
+			pop(ptr_stack);
+		}
+		
+		put(ptr_stack, *points);
+		points++;
+	}
 }
 /* ########################################################### */
 
