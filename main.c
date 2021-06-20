@@ -26,14 +26,9 @@ Stack* newStack(void)
  * Returns Stack* | pointer to the new stack
 */
 {
-	int i;
 	static Stack local_stack;
-	local_stack.top = 0;
-
-	for (i = 0; i < CHUNK; i++)
-	{
-		memset(&local_stack.elements[i], 0, sizeof(Point));
-	}
+	
+	memset(&local_stack, 0, sizeof(Stack));
 
 	return &local_stack;
 }
@@ -46,7 +41,7 @@ int put(Stack *ptr_stack, Point element)
  * Returns int | 0 if succeeded, -1 if failed
 */
 {
-	if (ptr_stack->top >= 0 && ptr_stack->top < sizeof(ptr_stack->elements)/sizeof(ptr_stack->elements[0]))
+	if (ptr_stack->top >= 0 && ptr_stack->top < (sizeof(ptr_stack->elements)/sizeof(ptr_stack->elements[0])))
 	{
 		ptr_stack->elements[ptr_stack->top] = element;
 		ptr_stack->top++;
@@ -70,11 +65,12 @@ Point peek(Stack *ptr_stack, int pos)
 	memset(&tmp, 0, sizeof(Point));
 
 	if (pos < 0){printf("[ ERROR ] Position to peek has to be a positive integer\n");}
+
 	if (ptr_stack->top <= 0){printf("Stack is empty\n");}
 
 	if (ptr_stack->top > 0)
 	{
-		tmp = (ptr_stack->top > pos) ? ptr_stack->elements[ptr_stack->top - (1 + pos)] : ptr_stack->elements[ptr_stack->top - 1];
+		tmp = (ptr_stack->top > pos) ? ptr_stack->elements[ptr_stack->top - (pos + 1)] : ptr_stack->elements[ptr_stack->top - 1];
 	}
 	
 	return tmp;
@@ -94,9 +90,9 @@ Point pop(Stack *ptr_stack)
 
 	if (ptr_stack->top > 0)
 	{
-		tmp = ptr_stack->elements[ptr_stack->top - 1];
-		memset(&(ptr_stack->elements[ptr_stack->top - 1]), 0, sizeof(Point));
 		ptr_stack->top--;
+		tmp = ptr_stack->elements[ptr_stack->top];
+		memset(&(ptr_stack->elements[ptr_stack->top]), 0, sizeof(Point));
 	}
 
 	return tmp;
@@ -110,7 +106,7 @@ void relAngle(const Point ref, Point *p)
  * Auxiliary function for calculating the relative angle
  * between reference point and given point in the set.
  * ref (required) ---> Point | reference point
- * p (required) ---> Point | point by which angle is calculated
+ * *p (required) ---> Point* | point with which angle is calculated
 */
 {
 	float dy, dx;
@@ -192,7 +188,7 @@ void SortByAngle(Point *points, int *vector_size, Stack *ptr_stack)
 	 * Rule function for quicksort algorithm.
 	 * p1 (required) ---> void* | void pointer
 	 * p2 (required) ---> void* | void pointer
-	 * Return int | 0 if p1 == p2, 1 if p1 > p2 or -1 if p1 < p2
+	 * Returns int | 0 if p1 == p2, 1 if p1 > p2 or -1 if p1 < p2
 	*/
 	{
 		Point *P1 = 0, *P2 = 0;
@@ -375,19 +371,19 @@ int main(void)
 	
 	dp = ptrDataPoints;
 	printf("# ORIGINAL DATA POINTS\n");
-	for (i = 0; i < s; i++){printf("[ %d ]\t(%.2f, %.2f, %.6f)\n", i, dp->x, dp->y, dp->a); dp++;}
+	for (i = 0; i < s; i++){printf("[ %.2d ]\t(%.2f, %.2f, %.6f)\n", i, dp->x, dp->y, dp->a); dp++;}
 
 	SortByAngle(ptrDataPoints, &s, ptrStack);
 	genConvHull(ptrDataPoints, &s, ptrStack);
 	
 	dp = ptrDataPoints;
 	printf("\n# AFTER SORTING BY ANGLE\n");
-	for (i = 0; i < s; i++){printf("[ %d ]\t(%.2f, %.2f, %.6f)\n", i, dp->x, dp->y, dp->a); dp++;}
+	for (i = 0; i < s; i++){printf("[ %.2d ]\t(%.2f, %.2f, %.6f)\n", i, dp->x, dp->y, dp->a); dp++;}
 
 	Point test;
 	printf("\n# CONVEX HULL\n");
 	for (i = 0; i < ptrStack->top; i++)
-	{test = peek(ptrStack, i); printf("[ %d ]\t(%.2f, %.2f, %.6f)\n", i, test.x, test.y, test.a);}
+	{test = peek(ptrStack, i); printf("[ %.2d ]\t(%.2f, %.2f, %.6f)\n", i, test.x, test.y, test.a);}
 
 	return 0;
 }
