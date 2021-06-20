@@ -285,7 +285,7 @@ Point* ReadDataFile(const char filename[32])
 	ptr_dp = &data_points[0];	
 
 	regex_t pattern;
-	if (regcomp(&pattern, "^[0-9]+( +)?,|;( +)?[0-9]+", REG_EXTENDED) != 0){printf("[ ERROR ] Regular expression not compiled\n");}
+	if (regcomp(&pattern, "^-?[0-9]+( +)?,|;( +)?-?[0-9]+", REG_EXTENDED) != 0){printf("[ ERROR ] Regular expression not compiled\n");}
 
 	l = 0;
 
@@ -363,7 +363,7 @@ Point* ReadDataFile(const char filename[32])
 
 int main(void)
 {
-	int i, s = 10;
+	int i, s = CHUNK;
 	Stack *ptrStack = newStack();
 	
 	Point *ptrDataPoints = ReadDataFile("data_points.txt");
