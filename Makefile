@@ -2,22 +2,36 @@
 
 COMP=gcc
 FLAG=-Wall
-EXEC=run
+EXEC=main
 
-SRCS=$(wildcard *.c)
-OBJS=$(patsubst %.c, %.o, $(SRCS))
+SRC:=src
+OBJ:=obj
+BIN:=bin
+DEP:=.deps
 
-all: $(EXEC)
+SRCS=$(wildcard $(SRC)/*.c)
+OBJS=$(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SRCS))
+DEPS=$(patsubst $(OBJ)/%.o, $(DEP)/%.d, $(OBJS))
 
-$(EXEC): $(OBJS)
+-include $(DEPS)
+TREE=-MT $@ -MMD -MP -MF $(@:$(OBJ)/%.o=$(DEP)/%.d)
+
+all: $(BIN)/$(EXEC)
+
+build:
+	@echo "creating directories..."
+	mkdir $(SRC) $(OBJ) $(BIN) $(DEP)
+	mv *.c *.h $(SRC)/
+
+$(BIN)/$(EXEC): $(OBJS)
 	@echo "compiling $@"
 	$(COMP) $(FLAG) $(OBJS) -o $@ -l m
 
-%.o: %.c
+$(OBJ)/%.o: $(SRC)/%.c
 	@echo "making object $@"
-	$(COMP) $(FLAG) -c $< -o $@
+	$(COMP) $(FLAG) -c $< -o $@ $(TREE)
 
 clean:
-	clear
 	@echo "cleaning up..."
-	rm *.o $(EXEC)
+	mv $(SRC)/* $(PWD)/
+	rm -rf $(OBJ) $(BIN) $(DEP) $(SRC)
